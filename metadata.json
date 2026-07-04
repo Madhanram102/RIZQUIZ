@@ -1,0 +1,9 @@
+{
+  "name": "RIZ QUIZ Master",
+  "description": "Upload a video and automatically generate an interactive quiz based on its content using Gemini 3 Flash.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
