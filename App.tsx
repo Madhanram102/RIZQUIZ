@@ -7,11 +7,12 @@ import {
   generateQuizFromSearch,
   generateQuizFromPDF
 } from './services/geminiService';
-import { QuizQuestion, AppStatus, QuizState } from './types';
+import { QuizQuestion, AppStatus, QuizState, ContentSummary } from './types';
 import MediaUploader from './components/VideoUploader';
 import QuizDisplay from './components/QuizDisplay';
 import ResultView from './components/ResultView';
 import VideoPreview from './components/VideoPreview';
+import SummaryView from './components/SummaryView';
 import Logo from './components/Logo';
 import { Zap, Search, Eye, ShieldCheck, FileText, ChevronRight } from 'lucide-react';
 
@@ -49,8 +50,8 @@ const App: React.FC = () => {
         setCurrentPdfSlot(1);
         setStatus('generating');
         try {
-          const questions = await generateQuizFromPDF(base64, 1);
-          startQuiz(questions);
+          const result = await generateQuizFromPDF(base64, 1);
+          startQuiz(result.questions, result.summary);
         } catch (err: any) { handleError(err); }
       };
       reader.readAsDataURL(file);
@@ -66,8 +67,8 @@ const App: React.FC = () => {
     setCurrentPdfSlot(nextSlot);
     
     try {
-      const questions = await generateQuizFromPDF(pdfBase64, nextSlot);
-      startQuiz(questions);
+      const result = await generateQuizFromPDF(pdfBase64, nextSlot);
+      startQuiz(result.questions, result.summary);
     } catch (err: any) { handleError(err); }
   };
 
@@ -81,8 +82,8 @@ const App: React.FC = () => {
         const base64 = (reader.result as string).split(',')[1];
         setStatus('generating');
         try {
-          const questions = await generateQuizFromVideo(base64, file.type);
-          startQuiz(questions);
+          const result = await generateQuizFromVideo(base64, file.type);
+          startQuiz(result.questions, result.summary);
         } catch (err: any) { handleError(err); }
       };
       reader.readAsDataURL(file);
@@ -94,8 +95,8 @@ const App: React.FC = () => {
     setLoadingMode('youtube');
     setStatus('generating');
     try {
-      const questions = await generateQuizFromYoutube(url);
-      startQuiz(questions);
+      const result = await generateQuizFromYoutube(url);
+      startQuiz(result.questions, result.summary);
     } catch (err: any) { handleError(err); }
   };
 
@@ -108,8 +109,8 @@ const App: React.FC = () => {
       reader.onload = async () => {
         const base64 = (reader.result as string).split(',')[1];
         try {
-          const questions = await generateQuizFromImage(base64, file.type);
-          startQuiz(questions);
+          const result = await generateQuizFromImage(base64, file.type);
+          startQuiz(result.questions);
         } catch (err: any) { handleError(err); }
       };
       reader.readAsDataURL(file);
@@ -121,20 +122,25 @@ const App: React.FC = () => {
     setLoadingMode('eyetest');
     setStatus('generating');
     try {
-      const questions = await generateQuizFromSearch(query);
-      startQuiz(questions);
+      const result = await generateQuizFromSearch(query);
+      startQuiz(result.questions);
     } catch (err: any) { handleError(err); }
   };
 
-  const startQuiz = (questions: QuizQuestion[]) => {
+  const startQuiz = (questions: QuizQuestion[], summary?: ContentSummary) => {
     setQuizState({
       questions,
       currentIndex: 0,
       score: 0,
       userAnswers: [],
       isFinished: false,
+      summary,
     });
-    setStatus('quiz');
+    if (summary) {
+      setStatus('summary');
+    } else {
+      setStatus('quiz');
+    }
   };
 
   const handleError = (err: any) => {
@@ -246,6 +252,14 @@ const App: React.FC = () => {
           </div>
         )}
 
+        {status === 'summary' && quizState.summary && (
+          <SummaryView 
+            summary={quizState.summary}
+            onStartQuiz={() => setStatus('quiz')}
+            onCancel={restart}
+          />
+        )}
+
         {status === 'quiz' && (
           <div className="flex flex-col">
             {loadingMode === 'pdf' && (
@@ -274,6 +288,7 @@ const App: React.FC = () => {
               score={quizState.score}
               onRestart={restart}
               onRetake={handleRetake}
+              summary={quizState.summary}
             />
             {loadingMode === 'pdf' && (
               <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-center">

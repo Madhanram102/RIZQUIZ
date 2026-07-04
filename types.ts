@@ -1,4 +1,11 @@
 
+export interface ContentSummary {
+  title: string;
+  overview: string;
+  keyTakeaways: string[];
+  coreConcepts: { concept: string; explanation: string }[];
+}
+
 export interface QuizQuestion {
   question: string;
   options: {
@@ -18,6 +25,8 @@ export interface QuizState {
   score: number;
   userAnswers: string[];
   isFinished: boolean;
+  summary?: ContentSummary;
 }
 
-export type AppStatus = 'idle' | 'previewing' | 'uploading' | 'generating' | 'quiz' | 'finished';
+export type AppStatus = 'idle' | 'previewing' | 'uploading' | 'generating' | 'summary' | 'quiz' | 'finished';
+

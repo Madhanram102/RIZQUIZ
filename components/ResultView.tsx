@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
-import { QuizQuestion } from '../types';
-import { CheckCircle2, XCircle, RefreshCcw, BookOpen, Trophy, Star, Target, TrendingUp, Brain, RotateCcw, ExternalLink } from 'lucide-react';
+import { QuizQuestion, ContentSummary } from '../types';
+import { CheckCircle2, XCircle, RefreshCcw, BookOpen, Trophy, Star, Target, TrendingUp, Brain, RotateCcw, ExternalLink, Sparkles, Check, BrainCircuit } from 'lucide-react';
 
 interface ResultViewProps {
   questions: QuizQuestion[];
@@ -9,6 +9,7 @@ interface ResultViewProps {
   score: number;
   onRestart: () => void;
   onRetake: () => void;
+  summary?: ContentSummary;
 }
 
 const Confetti = () => {
@@ -59,7 +60,8 @@ const Confetti = () => {
   );
 };
 
-const ResultView: React.FC<ResultViewProps> = ({ questions, userAnswers, score, onRestart, onRetake }) => {
+const ResultView: React.FC<ResultViewProps> = ({ questions, userAnswers, score, onRestart, onRetake, summary }) => {
+  const [activeTab, setActiveTab] = useState<'performance' | 'study-guide'>('performance');
   const total = questions.length;
   const wrong = total - score;
   const percentage = (score / total) * 100;
@@ -203,104 +205,195 @@ const ResultView: React.FC<ResultViewProps> = ({ questions, userAnswers, score, 
       </div>
 
       {/* Detailed Review Section */}
-      <div className="p-8 sm:p-12 bg-white">
-        <div className="flex items-center justify-between mb-10">
-          <h3 className="text-2xl font-black text-slate-800 tracking-tight flex items-center">
-            <span className="w-2 h-8 bg-indigo-600 rounded-full mr-3"></span>
-            Performance Analysis
-          </h3>
-          <div className="px-4 py-1.5 bg-slate-100 rounded-full text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center space-x-2">
-            <ShieldCheck size={12} className="text-indigo-500" />
-            <span>Expert Review</span>
+      {summary && (
+        <div className="flex bg-slate-100 border-t border-b border-slate-200/60 p-1.5">
+          <div className="flex space-x-1 w-full max-w-md mx-auto">
+            <button
+              onClick={() => setActiveTab('performance')}
+              className={`flex-1 flex items-center justify-center space-x-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === 'performance'
+                  ? 'bg-white text-indigo-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Target size={16} />
+              <span>Performance Analysis</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('study-guide')}
+              className={`flex-1 flex items-center justify-center space-x-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === 'study-guide'
+                  ? 'bg-white text-indigo-600 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <BookOpen size={16} />
+              <span>Study Guide & Summary</span>
+            </button>
           </div>
         </div>
-        
-        <div className="space-y-16">
-          {questions.map((q, idx) => {
-            const isCorrect = userAnswers[idx] === q.correct_answer;
-            return (
-              <div key={idx} className="group relative">
-                <div className="flex items-start mb-6">
-                  <div className={`mt-1 mr-4 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-black shadow-md ${isCorrect ? 'bg-emerald-500' : 'bg-rose-500'}`}>
-                    {idx + 1}
-                  </div>
-                  <h4 className="text-xl font-bold text-slate-800 leading-snug">
-                    {q.question}
-                  </h4>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  {(Object.entries(q.options) as [string, string][]).map(([key, text]) => {
-                    const isUserChoice = userAnswers[idx] === key;
-                    const isCorrectChoice = q.correct_answer === key;
-                    
-                    let containerStyles = 'bg-slate-50 border-slate-200 text-slate-600';
-                    let labelStyles = 'bg-slate-200 text-slate-500';
-                    let badge = null;
-                    
-                    if (isCorrectChoice) {
-                      containerStyles = 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-1 ring-emerald-500/20';
-                      labelStyles = 'bg-emerald-500 text-white';
-                      badge = <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center"><CheckCircle2 size={10} className="mr-1"/> Correct</span>;
-                    } else if (isUserChoice && !isCorrect) {
-                      containerStyles = 'bg-rose-50 border-rose-300 text-rose-900 ring-1 ring-rose-500/20';
-                      labelStyles = 'bg-rose-500 text-white';
-                      badge = <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-rose-600 flex items-center"><XCircle size={10} className="mr-1"/> Your Choice</span>;
-                    }
+      )}
 
-                    return (
-                      <div 
-                        key={key} 
-                        className={`relative p-4 rounded-2xl border-2 transition-all flex items-center ${containerStyles}`}
-                      >
-                        <span className={`w-7 h-7 rounded-lg flex items-center justify-center mr-3 text-xs font-black shrink-0 ${labelStyles}`}>
-                          {key}
-                        </span>
-                        <span className="font-medium text-sm leading-tight">{text}</span>
-                        {badge}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="relative overflow-hidden p-6 bg-slate-50 rounded-2xl border border-slate-100 group-hover:bg-indigo-50 transition-colors">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="p-1.5 bg-indigo-600 rounded-lg text-white shadow-sm shadow-indigo-200">
-                       <BookOpen size={14} />
+      {activeTab === 'performance' ? (
+        <div className="p-8 sm:p-12 bg-white">
+          <div className="flex items-center justify-between mb-10">
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight flex items-center">
+              <span className="w-2 h-8 bg-indigo-600 rounded-full mr-3"></span>
+              Performance Analysis
+            </h3>
+            <div className="px-4 py-1.5 bg-slate-100 rounded-full text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center space-x-2">
+              <ShieldCheck size={12} className="text-indigo-500" />
+              <span>Expert Review</span>
+            </div>
+          </div>
+          
+          <div className="space-y-16">
+            {questions.map((q, idx) => {
+              const isCorrect = userAnswers[idx] === q.correct_answer;
+              return (
+                <div key={idx} className="group relative">
+                  <div className="flex items-start mb-6">
+                    <div className={`mt-1 mr-4 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white font-black shadow-md ${isCorrect ? 'bg-emerald-500' : 'bg-rose-500'}`}>
+                      {idx + 1}
                     </div>
-                    <span className="text-xs font-black text-indigo-600 uppercase tracking-widest">
-                      AI Professional Insight
-                    </span>
+                    <h4 className="text-xl font-bold text-slate-800 leading-snug">
+                      {q.question}
+                    </h4>
                   </div>
-                  <p className="text-slate-700 text-sm leading-relaxed font-medium mb-4">
-                    {q.explanation}
-                  </p>
                   
-                  {q.sources && q.sources.length > 0 && (
-                    <div className="border-t border-slate-200 pt-4">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">References & Evidence</p>
-                      <div className="flex flex-wrap gap-2">
-                        {q.sources.map((src, sIdx) => (
-                          <a 
-                            key={sIdx} 
-                            href={src.uri} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center space-x-1 px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition-all"
-                          >
-                            <span>{src.title}</span>
-                            <ExternalLink size={10} />
-                          </a>
-                        ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    {(Object.entries(q.options) as [string, string][]).map(([key, text]) => {
+                      const isUserChoice = userAnswers[idx] === key;
+                      const isCorrectChoice = q.correct_answer === key;
+                      
+                      let containerStyles = 'bg-slate-50 border-slate-200 text-slate-600';
+                      let labelStyles = 'bg-slate-200 text-slate-500';
+                      let badge = null;
+                      
+                      if (isCorrectChoice) {
+                        containerStyles = 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-1 ring-emerald-500/20';
+                        labelStyles = 'bg-emerald-500 text-white';
+                        badge = <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-emerald-600 flex items-center"><CheckCircle2 size={10} className="mr-1"/> Correct</span>;
+                      } else if (isUserChoice && !isCorrect) {
+                        containerStyles = 'bg-rose-50 border-rose-300 text-rose-900 ring-1 ring-rose-500/20';
+                        labelStyles = 'bg-rose-500 text-white';
+                        badge = <span className="ml-auto text-[10px] font-black uppercase tracking-widest text-rose-600 flex items-center"><XCircle size={10} className="mr-1"/> Your Choice</span>;
+                      }
+
+                      return (
+                        <div 
+                          key={key} 
+                          className={`relative p-4 rounded-2xl border-2 transition-all flex items-center ${containerStyles}`}
+                        >
+                          <span className={`w-7 h-7 rounded-lg flex items-center justify-center mr-3 text-xs font-black shrink-0 ${labelStyles}`}>
+                            {key}
+                          </span>
+                          <span className="font-medium text-sm leading-tight">{text}</span>
+                          {badge}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="relative overflow-hidden p-6 bg-slate-50 rounded-2xl border border-slate-100 group-hover:bg-indigo-50 transition-colors">
+                    <div className="flex items-center space-x-2 mb-3">
+                      <div className="p-1.5 bg-indigo-600 rounded-lg text-white shadow-sm shadow-indigo-200">
+                         <BookOpen size={14} />
                       </div>
+                      <span className="text-xs font-black text-indigo-600 uppercase tracking-widest">
+                        AI Professional Insight
+                      </span>
                     </div>
-                  )}
+                    <p className="text-slate-700 text-sm leading-relaxed font-medium mb-4">
+                      {q.explanation}
+                    </p>
+                    
+                    {q.sources && q.sources.length > 0 && (
+                      <div className="border-t border-slate-200 pt-4">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">References & Evidence</p>
+                        <div className="flex flex-wrap gap-2">
+                          {q.sources.map((src, sIdx) => (
+                            <a 
+                              key={sIdx} 
+                              href={src.uri} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 px-3 py-1 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50 transition-all"
+                            >
+                              <span>{src.title}</span>
+                              <ExternalLink size={10} />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : (
+        summary && (
+          <div className="p-8 sm:p-12 bg-white space-y-8 animate-in fade-in duration-300">
+            {/* Overview Section */}
+            <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 sm:p-8">
+              <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center space-x-2">
+                <Sparkles size={14} className="text-indigo-500" />
+                <span>High-Level Overview</span>
+              </h2>
+              <p className="text-slate-700 text-lg leading-relaxed font-semibold">
+                {summary.overview}
+              </p>
+            </div>
+
+            {/* Key Takeaways Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center space-x-2">
+                <span className="w-1.5 h-4 bg-indigo-600 rounded-full"></span>
+                <span>Key Takeaways</span>
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {summary.keyTakeaways.map((takeaway, idx) => (
+                  <div 
+                    key={idx} 
+                    className="flex items-start p-5 bg-indigo-50/30 border border-indigo-100/50 rounded-2xl"
+                  >
+                    <div className="mt-0.5 mr-3 w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center flex-shrink-0">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed font-medium">
+                      {takeaway}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Core Concepts Accordion */}
+            <div className="space-y-4 pt-2">
+              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center space-x-2">
+                <span className="w-1.5 h-4 bg-violet-600 rounded-full"></span>
+                <span>Core Concepts Explained</span>
+              </h3>
+              
+              <div className="space-y-3">
+                {summary.coreConcepts.map((item, idx) => (
+                  <div key={idx} className="border border-slate-100 bg-white rounded-2xl p-6 hover:border-indigo-100 hover:shadow-md transition-all duration-300">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                        <BrainCircuit size={18} />
+                      </div>
+                      <h4 className="text-lg font-extrabold text-indigo-900">{item.concept}</h4>
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed font-medium pl-11">{item.explanation}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      )}
     </div>
   );
 };
